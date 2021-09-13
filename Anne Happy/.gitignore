@@ -1,0 +1,10 @@
+*.mkv
+*.exe
+*.txt
+test.bat
+.vscode/**
+.vspreview/**
+Comparisons/**
+Source/**
+Misc/**
+Scriptos/**
