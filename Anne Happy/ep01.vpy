@@ -15,44 +15,52 @@ from vsutil.clips import get_y
 
 core = vs.core
 
-src = depth(lvf.src(r"Source/EP01.mkv")[:34044],16) #34044 # source - trim black frames
-native_width, native_height = 1280, 720
+src = depth(lvf.src(r"Source/EP01.mkv")[:34044], 16) # import video source - trim black frames (34044)
+native_width, native_height = 1280, 720 # as returned by getnative and anibin
 output_width, output_height = 1920, 1080
 kernel = 'bicubic' # info only
-b, c = 1/3, 1/3  # 0.2 0.5 possible but 1/3, 1/3 slighlty sharper & no issues
-opstart, opend = 6544, 8701 
-edstart, edend = 31521, 33608
-goframe = 32550 #black bars first frame
+b, c = 1/3, 1/3  # 0.2 0.5 possible but 1/3, 1/3 slighlty sharper & no issues identified
+goframe = 32550 # black bars first frame
 
 def edgefix(clip: vs.VideoNode, go_frame: int):
+    """Crop black bars and 2 scenes in the ED and resize back to output resolution"""
     mappings = f"[{go_frame} {go_frame + 5}] [{go_frame + 6} {go_frame + 13}]"
     cropped = core.std.Crop(clip, left=6, right=6, top=0, bottom=0)
     stretch = core.resize.Lanczos(cropped, output_width, output_height)
     replaced = fvf.ReplaceFramesSimple(clip, stretch, mappings=mappings)
     return replaced
 
-def creditmask(clip: vs.VideoNode,descale: vs.VideoNode):
+def creditmask(clip: vs.VideoNode, descale: vs.VideoNode=None):
+    """Create mask protecting credits by comparing the input clip with the rescaled clip"""
+    if descale is None:
+        descale = fvf.Debicubic(get_y(clip), width=native_width, height=native_height, b=b, c=c)
     rescaled = core.resize.Bicubic(get_y(descale), output_width, output_height, filter_param_a=b, filter_param_b=c)
     diffmask = core.std.Expr([get_y(clip), get_y(rescaled)], 'x y - abs')
-    expand, inflate = 10, 7
+    expand, inflate = 3, 3
     for _ in range(expand):
         diffmask = core.std.Maximum(diffmask, planes=0)
     for _ in range(inflate):
         diffmask = core.std.Inflate(diffmask, planes=0)
-    credit_mask = adjust.Tweak(diffmask, cont=100)
-    credit_mask = core.std.BoxBlur(credit_mask,vpasses=30, hpasses=30)
+    credit_mask = adjust.Tweak(diffmask, cont=255)
+    #credit_mask = core.std.BoxBlur(credit_mask,vpasses=30, hpasses=30)
     return credit_mask    
 
+    # TODO
+
+    # Rewrite all of this for ncop/nced and custom masks where required (where ED encroaches a scene)
+
 def edgemask(clip: vs.VideoNode, retinex=True):
+    """Create edgemask, either using kgf retinex edgemask or prewitt with minor adjustments"""
     if retinex:
         edge_mask = kgf.retinex_edgemask(src=clip)
     else:
         edge_mask = core.std.Prewitt(get_y(clip), planes=0)
-        edge_mask = adjust.Tweak(edge_mask, cont=35)
-        edge_mask = core.std.BoxBlur(edge_mask, vpasses=2, hpasses=2)
+        edge_mask = adjust.Tweak(edge_mask, cont=49)
+        edge_mask = core.std.BoxBlur(edge_mask, vpasses=1, hpasses=1)
     return edge_mask
 
 def antialias(clip: vs.VideoNode, strength: int=1):
+    """AA clip using nnedi3 or eedi3 clamped"""
     if strength == 1:
         aa = lvf.aa.taa(clip,lvf.aa.nnedi3())
     else:
@@ -61,6 +69,8 @@ def antialias(clip: vs.VideoNode, strength: int=1):
 
 
 def rescale(clip: vs.VideoNode, aa=True):
+    """Descale clip to native resolution and rescale toi output resolution using nnedi3.
+    Masked for both credits and for lineart only. Performs AA on the clip as well if specified."""
     descale = fvf.Debicubic(get_y(clip), width=native_width, height=native_height, b=b, c=c)
     upscale = vdf.scale.nnedi3_upscale(descale)
     downscale = depth(muvf.SSIM_downsample(upscale, w=output_width, h=output_height, sigmoid=True),16) 
@@ -72,28 +82,33 @@ def rescale(clip: vs.VideoNode, aa=True):
     masked_rescale = core.std.MaskedMerge(lineart, clip, mask=credit_mask)
     return masked_rescale
 
-def denoise(clip=src):
+def denoise(clip: vs.VideoNode):
+    """Denoise luma based on brightness of the scene to avoid detail loss in dark areas, BM3D used for chroma"""
     luma_mask = core.adg.Mask(clip.std.PlaneStats())
-    denoised_chroma = mvf.BM3D(clip, sigma=[0, 4, 4], radius1=1)
-    denoise_luma_strong = hvf.SMDegrain(clip, thSAD=150, thSADC=0, tr=4, plane=4, chroma=True, prefilter=1, RefineMotion=True)
-    denoise_luma_weak = hvf.SMDegrain(clip, thSAD=80, thSADC=0, tr=4, plane=4, chroma=True, prefilter=1, RefineMotion=True)
+    denoised_chroma = mvf.BM3D(clip, sigma=[0, 3, 3], radius1=1)
+    denoise_luma_strong = hvf.SMDegrain(clip, thSAD=100, thSADC=0, tr=4, plane=4, chroma=True, prefilter=1, RefineMotion=True)
+    denoise_luma_weak = hvf.SMDegrain(clip, thSAD=30, thSADC=0, tr=4, plane=4, chroma=True, prefilter=1, RefineMotion=True)
     denoised_luma = core.std.MaskedMerge(denoise_luma_strong, denoise_luma_weak, luma_mask)
     denoised_merged = muvf.MergeChroma(denoised_luma, denoised_chroma)
     return denoised_merged
 
-def deband_grain(clip=src):
-    deband = gfa.GradFun3(clip, thr_det=1.5, detect_val=32, grainy=0, grainc=0, smode=6, mask=0)
+def deband_grain(clip: vs.VideoNode):
+    """Quick masked deband and add grain using kgf luma mask as used with the denoising function"""
+    deband = gfa.GradFun3(clip, thr_det=1.8, detect_val=28, grainy=0, grainc=0, smode=6, mask=0)
     masked_deband = core.std.MaskedMerge(deband, clip, edgemask(clip=clip))
     grain = kgf.adaptive_grain(masked_deband, strength=0.25, static=True, show_mask=False)
     return grain
 
 
 
-rescaled = rescale(src, aa=1)
-fixed = edgefix(rescaled, go_frame)
-denoised = denoise(fixed)
-deband = deband_grain(denoised)
-output = depth(deband,10)
-output.set_output()
+# rescaled = rescale(src, aa=1)
+# fixed = edgefix(rescaled, go_frame)
+# denoised = denoise(fixed)
+# deband = deband_grain(denoised)
+# output = depth(deband,10)
+# output.set_output()
+
+mask = creditmask(src)
+mask.set_output()
 
 
