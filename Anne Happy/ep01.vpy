@@ -1,8 +1,6 @@
 # Anne Happy Episode 1
-# Script by - Ryutai
-# imports
 
-from os import name
+# imports
 import vapoursynth as vs
 import atomchtools as att
 import gradfun_amod as gfa
@@ -20,27 +18,23 @@ from vsutil.clips import get_y
 core = vs.core
 core.max_cache_size = 11000
 episode = '01'
-end_frame = 34043
-
-# import video source - trim black frames (34044)
-src = depth(lvf.src(r"Source/01.mkv", force_lsmas=True)[:end_frame+1], 16)
+end_frame = 34045
 op_start, op_end = 6546, 8701
-# nb this is only the start of the actual ED that matches nced
 ed_start, ed_end, nced_offset = 32376, 33610, 920
-mask_mappings = ['[31527 31598]', '[31611 31682]', '[31691 31759]', '[31791 31862]',
-                 '[31875 31947]', '[32005 32092]', '[32105 32192]', '[32201 32268]', '[32278 32358]']
-
-ncop = depth(lvf.src(r"Source/ncop.mkv", force_lsmas=True)
-             [:op_end - op_start+1], 16)
-nced = depth(lvf.src(r"Source/nced.mkv", force_lsmas=True)
-             [nced_offset: nced_offset + ed_end-ed_start], 16)
-
-
 native_width, native_height = 1280, 720  # as returned by getnative and anibin
 output_width, output_height = 1920, 1080
 kernel = 'bicubic'  # info only
 b, c = 1/3, 1/3  # 0.2 0.5 possible but 1/3, 1/3 slighlty sharper & no issues identified
 goframe = 32551  # black bars first frame
+
+
+src = depth(lvf.src(r"Source/01.mkv", force_lsmas=True)[:end_frame+1], 16)
+ncop = depth(lvf.src(r"Source/ncop.mkv", force_lsmas=True)
+             [:op_end - op_start+1], 16)
+nced = depth(lvf.src(r"Source/nced.mkv", force_lsmas=True)
+             [nced_offset: nced_offset + ed_end-ed_start+1], 16)
+mask_mappings = ['[31527 31598]', '[31611 31682]', '[31691 31759]', '[31791 31862]',
+                 '[31875 31947]', '[32005 32092]', '[32105 32192]', '[32201 32268]', '[32278 32358]']
 
 
 def image_to_clip(clip: vs.VideoNode, image: str):
@@ -156,4 +150,4 @@ denoised = denoise(fixed)
 debanded = deband(denoised)
 output = depth(debanded, 10)
 output.set_output()
-src.set_output(1)
+# src.set_output(1)
