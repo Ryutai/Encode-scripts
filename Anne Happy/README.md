@@ -16,15 +16,15 @@
 
 * Apply nnedi3 AA.
 
-* Dehalo part of the ED with finedehalo.
+* Dehalo part of the ED with maskedDHA.
 
-* Merge credit back in to nc's/apply credit mask for over episode credits (original manual masks courtesy of Baal).
+* Merge credits back in to filtered nc's/apply credit mask for over episode credits (original manual masks courtesy of Baal).
 
 * Replace edges of 2 scenes in the ED with messed up edges (original redraws also courtesy of Baal).
 
 * Denoise with BM3D, applying luma denoising based on kgf luma mask to protect darker areas.
 
-* Small deband with grad3fun then add some grain based on kgf luma mask.
+* Small deband with gradfun3 then add some grain based on kgf luma mask.
 
 * x264 settings - 10 bit, fairly generic. Aiming for decent compression but prioritses detail retention.
 
