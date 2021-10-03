@@ -1,34 +1,38 @@
 # Anne Happy
 
-### Vapoursynth scripts and encoding settings.
+### Vapoursynth script and encoding settings.
 
-#### x264 10 bit 1080p encode for [Ambivalent-Subs](https://github.com/Ambivalent-subs)
+#### x264 10 bit 1080p encode for [Ambivalent-Subs](https://github.com/Ambivalent-subs), see comps here (link when complete)
 
 ###### _First vs script. Not really sure what I'm doing_
 
-Splice in nc's to allow merging later on.
+---
 
-Native res (720p) descale with debicubic 1/3 1/3
+* Splice in nc's to allow merging later on.
 
-Reupscale with nnedi3 and downscale back to 1080p with SSIM downsample
+* Native res (720p) descale with debicubic 1/3 1/3
 
-Apply nnedi3 AA.
+* Reupscale with nnedi3 and downscale back to 1080p with SSIM downsample
 
-Dehalo part of the ED with finedehalo.
+* Apply nnedi3 AA.
 
-Merge credit back in to nc's/apply credit mask for over episode credits (original manual masks courtesy of Baal).
+* Dehalo part of the ED with finedehalo.
 
-Replace edges of 2 scenes in the ED with messed up edges, original redraws courtesy of Baal
+* Merge credit back in to nc's/apply credit mask for over episode credits (original manual masks courtesy of Baal).
 
-Denoise with BM3D, applying luma denoising based on kgf luma mask t protect darker areas
+* Replace edges of 2 scenes in the ED with messed up edges (original redraws also courtesy of Baal).
 
-Small deband with grad3fun then add some grain based on kgf luma mask.
+* Denoise with BM3D, applying luma denoising based on kgf luma mask to protect darker areas.
 
-x264 settings - 10 bit, fairly generic. Aiming for decent compression but prioritses detail retention.
+* Small deband with grad3fun then add some grain based on kgf luma mask.
 
-### Many Thanks to
+* x264 settings - 10 bit, fairly generic. Aiming for decent compression but prioritses detail retention.
 
-- [Scyrous](https://github.com/Scyrous) - Setup help, lots of comments and pointers
+---
+
+### Many Thanks to:
+
+- [Scyrous](https://github.com/Scyrous) - Setup help, lots of comments and pointers on VS and x264
 - Baal - sharing old SmugCat avs encode scripts and resources.
 - [Light](https://github.com/LightArrowsEXE) - Setup help, pointers, general comments
 - [Moe](https://github.com/Moelancholy) - Setup help, links, lot's of explaining.
