@@ -1,6 +1,7 @@
 *.mkv
 *.exe
 *.txt
+*.lwi
 test.bat
 .vscode/**
 .vspreview/**
