@@ -1,11 +1,49 @@
+# Video/source files
 *.mkv
-*.exe
-*.txt
+*.mp4
+
+# Audio
+*.aac
+*.mka
+*.opus
+*.wav
+*.flac
+
+# VapourSynth & indexing files
+*.bookmarks
+*.dgi
+*.ffindex
+*.index
 *.lwi
-test.bat
+
+# Fansub related files
+*.ass
+*.otf
+*.ttf
+
+# Scripts
+*comp.*vpy
+
+
+# Other miscellaneous file types
+*.exe
+*.glsl
+*.hook
+*.dll
+*.txt
+*.svg
+*.sfv
+*.torrent
+*.url
+
+
+# VS Code directories
 .vscode/**
 .vspreview/**
-Comparisons/**
-Source/**
+
+
+# Folders containing other resources or comparisons
 Misc/**
-Scriptos/**
+Comparisons/**
+Source/Audio/**
+
