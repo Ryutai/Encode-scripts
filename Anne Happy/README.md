@@ -1,12 +1,11 @@
-# Anne Happy
+# Anne Happy - Vapoursynth scripts and x264 settings
 
 ![Anne Happy](Resources/Logo.png)
 
-### Vapoursynth scripts and x264 settings
 
-#### x264 10 bit 1080p encode for [Ambivalent-Subs](https://github.com/Ambivalent-subs), see comps here (links when complete)
+#### x264 10 bit 1080p encode for [Ambivalent-Subs](https://github.com/Ambivalent-subs) or [SmugCat](https://github.com/smugcatfs)  ¯\\\_(ツ)\_/¯ , see comps here (links when complete).
 
-###### _First vapoursynth script. Still lots I don't know so expect sub-optimal results :):_
+###### _First vapoursynth script. Still lots I don't know so expecting sub-optimal results._
 
 ---
 
@@ -18,13 +17,13 @@
 
 * Apply nnedi3 AA to reduce any leftover ailising after rescaling.
 
-* Dehalo part of the ED with maskedDHA, the whole scene looks awful and currently not too effective - help wanted - feel free to open an issue/pull request.
+* Dehalo part of the ED with maskedDHA, the whole scene looks iffy and currently not too effective - help wanted - feel free to open an issue/pull request.
 
 * Merge credits back in to filtered nc's and apply credit mask for credits that overlap with episode content (original masks courtesy of Baal).
 
 * Replace edges of 2 scenes in the ED with messed up edges (original redraws also courtesy of Baal).
 
-* Adaptive denoise using BM3D for luma and CCD for chroma with a stronger SMDegrain/KNLM clip used as reference for the luma denoising.
+* Adaptive luma denoise using BM3D and CCD for chroma with a stronger SMDegrain/KNLM clip used as reference for the luma denoising.
 
 * Deband with gradfun3_amod then add static grain based on kgf luma mask via adptvgrnMod. Luma only and slighlty softer, larger grain for the aesthetic of the show.
 
